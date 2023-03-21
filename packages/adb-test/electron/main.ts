@@ -7,43 +7,52 @@
 // │ │ ├── main.js
 // │ │ └── preload.js
 // │
-process.env.DIST = join(__dirname, '../dist')
-process.env.PUBLIC = app.isPackaged ? process.env.DIST : join(process.env.DIST, '../public')
+process.env.DIST = join(__dirname, '../dist');
+process.env.PUBLIC = app.isPackaged ? process.env.DIST : join(process.env.DIST, '../public');
 
-import { join } from 'path'
-import { app, BrowserWindow } from 'electron'
+import { join } from 'path';
+import { app, BrowserWindow, session } from 'electron';
+import { ElectronBlocker } from '@cliqz/adblocker-electron';
 
-let win: BrowserWindow | null
+// simply "import fetch from 'cross-fetch'" make error, I don't know any reason
+import 'cross-fetch/polyfill';
+
+let win: BrowserWindow | null;
 // Here, you can also use other preload
-const preload = join(__dirname, './preload.js')
+const preload = join(__dirname, './preload.js');
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-const url = process.env['VITE_DEV_SERVER_URL']
+// const url = process.env['VITE_DEV_SERVER_URL']
+const url = 'https://www.youtube.com/watch?v=HLvCnvXQizQ';
 
-function createWindow() {
+async function createWindow() {
   win = new BrowserWindow({
-    icon: join(process.env.PUBLIC, 'logo.svg'),
+    width: 1600,
+    height: 960,
     webPreferences: {
       contextIsolation: false,
       nodeIntegration: true,
       preload,
     },
-  })
+  });
 
-  // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
+  const blocker = await ElectronBlocker.fromPrebuiltAdsAndTracking(fetch);
+  blocker.enableBlockingInSession(session.defaultSession);
+
+  win.on('ready-to-show', () => {
+    win?.webContents.openDevTools();
+  });
 
   if (url) {
-    win.loadURL(url)
+    win.loadURL(url);
   } else {
     // win.loadFile('dist/index.html')
-    win.loadFile(join(process.env.DIST, 'index.html'))
+    win.loadFile(join(process.env.DIST, 'index.html'));
   }
 }
 
-app.on('window-all-closed', () => {
-  win = null
-})
+app.on('window-all-closed', async () => {
+  await session.defaultSession.clearCache();
+  win = null;
+});
 
-app.whenReady().then(createWindow)
+app.whenReady().then(createWindow);
