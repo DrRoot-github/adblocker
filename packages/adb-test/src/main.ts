@@ -1,5 +1,5 @@
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <div>
-    <p>shibes are cute</p>
+    <a href="https://www.youtube.com/watch?v=HLvCnvXQizQ">link</a>
   </div>
 `;

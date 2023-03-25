@@ -150,7 +150,7 @@ export class DOMMonitor {
         this.handleUpdatedNodes(getElementsFromMutations(mutations));
       });
 
-      this.observer.observe(window.document.documentElement, {
+      this.observer.observe(window.document, {
         // Monitor some attributes
         attributes: true,
         attributeFilter: ['class', 'id', 'href'],
@@ -215,13 +215,16 @@ export class DOMMonitor {
     return false;
   }
 
-  private handleUpdatedNodes(elements: Element[]): boolean {
-    if (elements.length !== 0) {
+  private handleUpdatedNodes(elements: (Element | null)[]): boolean {
+    const availableElements = elements.filter((x) => !!x) as Element[];
+    if (availableElements.length !== 0) {
       this.cb({
         type: 'elements',
-        elements: elements.filter((e) => IGNORED_TAGS.has(e.nodeName.toLowerCase()) === false),
+        elements: availableElements.filter(
+          (e) => IGNORED_TAGS.has(e.nodeName.toLowerCase()) === false,
+        ) as Element[],
       });
-      return this.handleNewFeatures(extractFeaturesFromDOM(elements));
+      return this.handleNewFeatures(extractFeaturesFromDOM(availableElements));
     }
 
     return false;

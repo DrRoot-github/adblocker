@@ -21,8 +21,11 @@ let win: BrowserWindow | null;
 // Here, you can also use other preload
 const preload = join(__dirname, './preload.js');
 // 🚧 Use ['ENV_NAME'] avoid vite:define plugin - Vite@2.x
-// const url = process.env['VITE_DEV_SERVER_URL']
-const url = 'https://www.youtube.com/watch?v=HLvCnvXQizQ';
+const url = process.env['VITE_DEV_SERVER_URL'];
+// const url = 'https://www.youtube.com/watch?v=HLvCnvXQizQ';
+
+// disable console that output enormous texts of blocked content
+// console.log = () => {};
 
 async function createWindow() {
   win = new BrowserWindow({
